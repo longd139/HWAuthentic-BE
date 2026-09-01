@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customers {
+  id              Int       @id @default(autoincrement())
+  full_name       String    @db.VarChar(255)
+  phone_number    String    @unique(map: "uq_customers_phone") @db.VarChar(20)
+  email           String    @db.VarChar(255)
+  default_address String?   @db.Text
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime? @default(now()) @db.Timestamptz(6)
+
+  orders          Orders[]
+
+  @@map("customers")
+}
+
+model Products {
+  id          Int               @id @default(autoincrement())
+  sku_code    String            @unique(map: "uq_products_sku") @db.VarChar(100)
+  name        String            @db.VarChar(255)
+  brand       String?           @db.VarChar(100)
+  description String?           @db.Text
+  base_price  BigInt
+  is_active   Boolean           @default(true)
+  created_at  DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?         @default(now()) @db.Timestamptz(6)
+
+  variants    ProductVariants[]
+
+  @@index([is_active], map: "idx_products_is_active")
+  @@map("products")
+}
+
+model ProductVariants {
+  id             Int          @id @default(autoincrement())
+  product_id     Int
+  sku_variant    String?      @db.VarChar(100)
+  size           String?      @db.VarChar(50)
+  color          String?      @db.VarChar(50)
+  price_override BigInt?
+  stock_quantity Int          @default(0)
+  is_active      Boolean      @default(true)
+  created_at     DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime?    @default(now()) @db.Timestamptz(6)
+
+  product        Products     @relation(fields: [product_id], references: [id], onUpdate: Restrict, onDelete: Restrict, map: "fk_variants_product")
+  order_items    OrderItems[]
+
+  @@unique([product_id, size, color], map: "uq_variant_product_size_color")
+  @@index([product_id], map: "idx_variants_product_id")
+  @@index([is_active], map: "idx_variants_is_active")
+  @@map("product_variants")
+}
+
+model Orders {
+  id                     String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customer_id            Int
+  recipient_name         String            @db.VarChar(255)
+  recipient_phone        String            @db.VarChar(20)
+  recipient_email        String            @db.VarChar(255)
+  shipping_address       String            @db.Text
+  total_amount           BigInt
+  payment_method         String            @default("COD") @db.VarChar(50)
+  payment_trans_id       String?           @db.VarChar(255)
+  status                 String            @default("PENDING") @db.VarChar(50)
+  shipping_provider      String?           @default("VIETTEL_POST") @db.VarChar(50)
+  shipping_tracking_code String?           @db.VarChar(100)
+  refund_proof_image     String?           @db.Text
+  refund_reason          String?           @db.Text
+  refunded_at            DateTime?         @db.Timestamptz(6)
+  created_at             DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime?         @default(now()) @db.Timestamptz(6)
+
+  customer               Customers         @relation(fields: [customer_id], references: [id], onUpdate: Restrict, onDelete: Restrict, map: "fk_orders_customer")
+  order_items            OrderItems[]
+  status_logs            OrderStatusLogs[]
+
+  @@index([customer_id], map: "idx_orders_customer_id")
+  @@index([recipient_phone], map: "idx_orders_recipient_phone")
+  @@index([shipping_tracking_code], map: "idx_orders_shipping_tracking_code")
+  @@index([status, created_at], map: "idx_orders_status_created_at")
+  @@index([created_at(sort: Desc)], map: "idx_orders_created_at")
+  @@map("orders")
+}
+
+model OrderItems {
+  id                Int             @id @default(autoincrement())
+  order_id          String          @db.Uuid
+  variant_id        Int
+  quantity          Int
+  price_at_purchase BigInt
+
+  order             Orders          @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "fk_items_order")
+  variant           ProductVariants @relation(fields: [variant_id], references: [id], onUpdate: Restrict, onDelete: Restrict, map: "fk_items_variant")
+
+  @@index([order_id], map: "idx_order_items_order_id")
+  @@index([variant_id], map: "idx_order_items_variant_id")
+  @@map("order_items")
+}
+
+model OrderStatusLogs {
+  id         Int       @id @default(autoincrement())
+  order_id   String    @db.Uuid
+  from_status String?  @db.VarChar(50)
+  to_status   String   @db.VarChar(50)
+  note       String?   @db.Text
+  changed_by String    @default("SYSTEM") @db.VarChar(100)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+
+  order      Orders    @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "fk_logs_order")
+
+  @@index([order_id, created_at(sort: Asc)], map: "idx_order_status_logs_order_id")
+  @@map("order_status_logs")
+}
