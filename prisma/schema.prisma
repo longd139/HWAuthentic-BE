@@ -119,3 +119,35 @@ model OrderStatusLogs {
   @@index([order_id, created_at(sort: Asc)], map: "idx_order_status_logs_order_id")
   @@map("order_status_logs")
 }
+
+model Roles {
+  id          Int          @id @default(autoincrement())
+  code        String       @unique(map: "uq_roles_code") @db.VarChar(50)
+  name        String       @db.VarChar(100)
+  description String?      @db.Text
+  created_at  DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?    @default(now()) @db.Timestamptz(6)
+
+  staff_users StaffUsers[]
+
+  @@map("roles")
+}
+
+model StaffUsers {
+  id            Int       @id @default(autoincrement())
+  role_id       Int
+  username      String    @unique(map: "uq_staff_username") @db.VarChar(50)
+  email         String    @unique(map: "uq_staff_email") @db.VarChar(255)
+  password_hash String    @db.VarChar(255)
+  full_name     String    @db.VarChar(100)
+  phone_number  String?   @db.VarChar(20)
+  is_active     Boolean   @default(true)
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime? @default(now()) @db.Timestamptz(6)
+
+  role          Roles     @relation(fields: [role_id], references: [id], onUpdate: Restrict, onDelete: Restrict, map: "fk_staff_role")
+
+  @@index([role_id], map: "idx_staff_users_role_id")
+  @@index([is_active], map: "idx_staff_users_is_active")
+  @@map("staff_users")
+}

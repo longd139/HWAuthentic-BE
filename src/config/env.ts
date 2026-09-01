@@ -15,4 +15,7 @@ export const ENV = {
   EMAIL_FROM: process.env.EMAIL_FROM || 'Ecommerce Shop <no-reply@ecommerce.local>',
   TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '',
   TELEGRAM_ADMIN_CHAT_ID: process.env.TELEGRAM_ADMIN_CHAT_ID || '',
+  JWT_SECRET: process.env.JWT_SECRET || 'super-secret-jwt-key-hwauthentic-2026',
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
+  ADMIN_COOKIE_NAME: process.env.ADMIN_COOKIE_NAME || 'hw_staff_session',
 };
