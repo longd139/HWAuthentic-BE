@@ -2,6 +2,8 @@ import express, { Application } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { ENV } from './config/env';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger';
 import routes from './routes';
 import { errorHandler } from './middlewares/errorHandler';
 
@@ -20,7 +22,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(ENV.COOKIE_SECRET));
 
-// 3. API Routes
+// 3. Swagger Documentation Route
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// 4. API Routes
 app.use('/api', routes);
 
 // 4. Global Error Handler Middleware

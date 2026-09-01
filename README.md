@@ -1,67 +1,57 @@
 # HWAuthentic E-Commerce System
 
-He thong E-Commerce ban hang truc tuyen ho tro Guest Checkout (khong can dang nhap), theo doi don hang 3 lop (Magic Link, Thank You Page, HttpOnly Cookie), khoa ton kho chong ban lo va luu vet trang thai don hang bang Database Trigger tren PostgreSQL.
+Hệ thống E-Commerce bán hàng trực tuyến hỗ trợ Guest Checkout (không cần đăng nhập), theo dõi đơn hàng 3 lớp (Magic Link, Thank You Page, HttpOnly Cookie), khóa tồn kho chống bán lố và lưu vết trạng thái đơn hàng bằng Database Trigger trên PostgreSQL.
 
 ---
 
-## 1. Yeu cau he thong
+## 1. Yêu cầu hệ thống
 
-- Node.js: phien ban >= 18 (Khuyen nghi Node.js 20 hoac 22 LTS)
+- Node.js: phiên bản >= 18 (Khuyến nghị Node.js 20 hoặc 22 LTS)
 - Package Manager: npm >= 9
-- Database: PostgreSQL >= 14 (Dang ho tro PostgreSQL 18)
+- Database: PostgreSQL >= 14 (Đang hỗ trợ PostgreSQL 18)
 
 ---
 
-## 2. Cau truc thu muc du an
+## 2. Cấu trúc thư mục dự án
 
 ```text
-ProjectBanHang/
-├── database/
-│   ├── schema.sql              # Tap lenh DDL khoi tao 6 bang, Trigger va Index
-│   └── seed_and_test.sql       # Du lieu mau va kich ban kiem thu tinh toan gia / ton kho
-├── Prepare/
-│   ├── summary.txt             # Tai lieu dac ta nghiep vu va yeu cau ky thuat
-│   └── dbdiagramio_hethong.txt # So do thiet ke quan he co so du lieu
-├── DOC/                        # Tai lieu mo rong
+HWAuthentic-BE/
+├── prisma/
+│   └── schema.prisma       # Schema Prisma ánh xạ 1-1 với PostgreSQL
 ├── src/
-│   └── HWAuthentic-BE/         # Ma nguon Backend (Express + TypeScript + Prisma)
-│       ├── prisma/
-│       │   └── schema.prisma   # Schema Prisma anh xa 1-1 voi PostgreSQL
-│       ├── src/
-│       │   ├── config/         # Cau hinh bien moi truong va ket noi Prisma Client
-│       │   ├── controllers/    # Xu ly request va response cua API
-│       │   ├── middlewares/    # Middleware xu ly loi toan cuc, validate request (Zod)
-│       │   ├── routes/         # Dinh tuyen cac endpoint API
-│       │   ├── services/       # Xu ly nghiep vu, Transaction va khoa dong
-│       │   ├── utils/          # Tien ich che mo du lieu (Masking), format response
-│       │   ├── app.ts          # Cau hinh Express App, CORS, Cookie Parser
-│       │   └── server.ts       # Khoi chay HTTP Server va xu ly Graceful Shutdown
-│       ├── .env                # File chua thong tin ket noi va bien moi truong
-│       ├── .env.example        # Mau bien moi truong
-│       ├── package.json        # Danh sach thu vien va scripts
-│       └── tsconfig.json       # Cau hinh TypeScript
+│   ├── config/             # Cấu hình biến môi trường và kết nối Prisma Client
+│   ├── controllers/        # Xử lý request và response của API
+│   ├── middlewares/        # Middleware xử lý lỗi toàn cục, validate request (Zod)
+│   ├── routes/             # Định tuyến các endpoint API
+│   ├── services/           # Xử lý nghiệp vụ, Transaction và khóa dòng
+│   ├── utils/              # Tiện ích che mờ dữ liệu (Masking), format response
+│   ├── app.ts              # Cấu hình Express App, CORS, Cookie Parser
+│   └── server.ts           # Khởi chạy HTTP Server và xử lý Graceful Shutdown
+├── .env                    # File chứa thông tin kết nối và biến môi trường
+├── .env.example            # Mẫu biến môi trường
+├── package.json            # Danh sách thư viện và scripts
+├── tsconfig.json           # Cấu hình TypeScript
 └── README.md
 ```
 
 ---
 
-## 3. Huong dan cai dat va khoi chay
+## 3. Hướng dẫn cài đặt và khởi chạy
 
-### Buoc 1: Khoi tao Co so du lieu PostgreSQL
+### Bước 1: Khởi tạo Cơ sở dữ liệu PostgreSQL
 
-1. Mo pgAdmin, DBeaver hoac cong cu quan ly PostgreSQL.
-2. Tao co so du lieu moi co ten: `ecommerce_db`
+1. Mở pgAdmin, DBeaver hoặc công cụ quản lý PostgreSQL.
+2. Tạo cơ sở dữ liệu mới có tên: `ecommerce_db`
    ```sql
    CREATE DATABASE ecommerce_db;
    ```
-3. Mo Query Tool tai database `ecommerce_db`, chay lan luot 2 tap tin SQL:
-   - Chay file `database/schema.sql` de khoi tao 6 bang, function, triggers va index.
-   - Chay file `database/seed_and_test.sql` de nap du lieu mau (san pham, bien the size/mau, ton kho).
+3. Mở Query Tool tại database `ecommerce_db`, chạy lần lượt 2 tập tin SQL:
+   - Chạy file `database/schema.sql` để khởi tạo 6 bảng, hàm, triggers và index.
+   - Chạy file `database/seed_and_test.sql` để nạp dữ liệu mẫu (sản phẩm, biến thể size/màu, tồn kho).
 
-### Buoc 2: Cau hinh bien moi truong cho Backend
+### Bước 2: Cấu hình biến môi trường cho Backend
 
-1. Di chuyen vao thu muc `src/HWAuthentic-BE`.
-2. Tao hoac chinh sua tap tin `.env` (dua theo `.env.example`):
+1. Mở file `.env` (dựa theo `.env.example`):
    ```env
    PORT=5000
    NODE_ENV=development
@@ -71,33 +61,32 @@ ProjectBanHang/
    COOKIE_SECRET="super-secret-guest-order-key-2026"
    ```
 
-### Buoc 3: Cai dat dependencies va sinh Prisma Client
+### Bước 3: Cài đặt dependencies và sinh Prisma Client
 
-Mo Terminal tai thu muc `src/HWAuthentic-BE` va chay cac lenh sau:
+Mở Terminal tại thư mục Backend và chạy các lệnh sau:
 
 ```bash
-cd src/HWAuthentic-BE
 npm install
 npx prisma generate
 ```
 
-### Buoc 4: Khoi chay Backend
+### Bước 4: Khởi chạy Backend
 
-#### Che do Phat trien (Development - Hot Reload):
+#### Chế độ Phát triển (Development - Tự động tải lại khi đổi mã nguồn):
 ```bash
 npm run dev
 ```
-Server se chay tai dia chi: `http://localhost:5000`
+Server sẽ chạy tại địa chỉ: `http://localhost:5000`
 
-#### Kiem tra trang thai hoat dong (Health Check):
-Truy cap trinh duyet hoac gui HTTP GET toi:
+#### Kiểm tra trạng thái hoạt động (Health Check):
+Truy cập trình duyệt hoặc gửi HTTP GET tới:
 `http://localhost:5000/api/health`
 
-Ket qua tra ve mong doi:
+Kết quả trả về mong đợi:
 ```json
 {
   "success": true,
-  "message": "He thong hoat dong binh thuong",
+  "message": "Hệ thống hoạt động bình thường",
   "data": {
     "status": "healthy",
     "timestamp": "..."
@@ -105,13 +94,18 @@ Ket qua tra ve mong doi:
 }
 ```
 
-#### Cong cu quan tri CSDL truc quan (Prisma Studio):
+#### Tra cứu và Kiểm thử API Trực quan (Swagger UI):
+Truy cập đường dẫn:
+`http://localhost:5000/api-docs`
+Giao diện Swagger cho phép tra cứu tài liệu đặc tả, danh sách tham số và gửi request trực tiếp đến từng API.
+
+#### Công cụ quản trị CSDL trực quan (Prisma Studio):
 ```bash
 npm run prisma:studio
 ```
-Truy cap: `http://localhost:5555` de xem va quan ly du lieu cac bang truc tiep tren giao dien web.
+Truy cập: `http://localhost:5555` để xem và quản lý dữ liệu các bảng trực tiếp trên giao diện web.
 
-#### Build va chay ban Production:
+#### Build và chạy bản Production:
 ```bash
 npm run build
 npm start
@@ -119,12 +113,12 @@ npm start
 
 ---
 
-## 4. Dac ta cac quy tac nghiep vu cot loi
+## 4. Đặc tả các quy tắc nghiệp vụ cốt lõi
 
-1. Guest Checkout: Khach hang khong can tai khoan, chi can 4 thong tin (Ho ten, So dien thoai, Email, Dia chi nhan hang).
-2. Safe UPSERT Khach hang: Khong ghi de Ho ten va Email goc cua khach hang cu, chi cap nhat dia chi giao hang gan nhat vao truong `default_address`.
-3. Snapshot bat bien: Bang `Orders` luu truc tiep snapshot thong tin nguoi nhan tai thoi diem dat don, dam bao toan ven lich su du ho so khach hang co thay doi.
-4. Chong ban lo (Overselling): Bat buoc dung Database Transaction va khoa dong `SELECT ... FOR UPDATE` tren bang `Product_Variants` truoc khi tru ton kho.
-5. Dinh gia dong: Backend luon tinh tong gia tri don dua tren `COALESCE(price_override, base_price)` tu CSDL, khong su dung gia do Frontend truyen len.
-6. Audit Trail tu dong: Toan bo thay doi trang thai don hang duoc Database Trigger tu dong ghi lai vao bang `Order_Status_Logs`.
-7. Bao mat thong tin: Ma tracking UUID duoc luu trong HttpOnly Cookie thay vi LocalStorage. Thong tin khach hang tra ve qua API tracking duoc che mo (Data Masking) de chong lo lot du lieu.
+1. Guest Checkout: Khách hàng không cần tạo tài khoản, chỉ cần 4 thông tin bắt buộc (Họ tên, Số điện thoại, Email, Địa chỉ nhận hàng).
+2. Safe UPSERT Khách hàng: Không tự ý ghi đè Họ tên và Email gốc của khách hàng cũ nếu chưa xác thực, chỉ cập nhật địa chỉ giao hàng gần nhất vào trường `default_address`.
+3. Snapshot bất biến: Bảng `Orders` lưu trực tiếp snapshot thông tin người nhận tại thời điểm đặt đơn, đảm bảo tính toàn vẹn lịch sử dù hồ sơ khách hàng có bị chỉnh sửa sau này.
+4. Chống bán lố (Overselling): Bắt buộc dùng Database Transaction và kỹ thuật khóa dòng `SELECT ... FOR UPDATE` trên bảng `Product_Variants` trước khi trừ tồn kho.
+5. Định giá động: Backend luôn tự tính tổng giá trị đơn hàng dựa trên `COALESCE(price_override, base_price)` từ CSDL, tuyệt đối không sử dụng giá do Frontend truyền lên.
+6. Audit Trail tự động: Toàn bộ thay đổi trạng thái đơn hàng được Database Trigger tự động ghi lại 100% vào bảng `Order_Status_Logs`.
+7. Bảo mật thông tin: Mã tracking UUID được lưu trong HttpOnly Cookie thay vì LocalStorage để chống XSS. Thông tin cá nhân của khách hàng trả về qua API tracking được che mờ (Data Masking) để chống lộ lọt dữ liệu.
